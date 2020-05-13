@@ -7,6 +7,7 @@ class AsyncQueue {
   private MAX_RETRY = 0;
   private CONCURRENCY = 1;
   private TASKS_RUNNING = 0;
+  private RUNNER_WORKING = false;
 
   constructor(options?: Options) {
     this._queue = new PFQueue();
@@ -38,16 +39,23 @@ class AsyncQueue {
     return this.CONCURRENCY > this.TASKS_RUNNING && this._queue.canNext();
   }
 
-  private async run() {
-    const task = this._queue.dequeue();
+  private async runTask() {
     this.TASKS_RUNNING++;
+    const task = this._queue.dequeue();
     await task.tryRun(this.MAX_RETRY);
-    console.log('TASKS_RUNNING ', this.TASKS_RUNNING);
     this.TASKS_RUNNING--;
 
-    if (this.canRun()) {
-      this.run();
+    if (!this.RUNNER_WORKING && this.canRun()) {
+      this.runner();
     }
+  }
+
+  private async runner() {
+    this.RUNNER_WORKING = true;
+    while (this.canRun()) {
+      this.runTask();
+    }
+    this.RUNNER_WORKING = false;
   }
 
   push(fn: PromiseFunc, options?: TaskOptions) {
@@ -59,11 +67,7 @@ class AsyncQueue {
   }
 
   async start() {
-    for (let index = 0; index < this.CONCURRENCY; index++) {
-      if (this.canRun()) {
-        this.run();
-      }
-    }
+    this.runner();
 
     return new Promise(done => {
       if (!this._queue.canNext()) {
