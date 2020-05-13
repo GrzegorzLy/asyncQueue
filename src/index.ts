@@ -1,38 +1,28 @@
 import Queue from './AsyncQueue';
 
-const queue = new Queue({maxRetry: 2, concurrency: 1});
+const queue = new Queue({maxRetry: 2, concurrency: 3});
 
-queue
-  .push(() => new Promise(res => setTimeout(() => res(1), 300)), {name: '1'})
-  .then(console.log)
-  .catch(console.log);
-queue
-  .push(() => new Promise(res => setTimeout(() => res(2), 200)), {
-    name: '2',
-  })
-  .then(console.log)
-  .catch(console.log);
-queue
-  .push(() => new Promise(res => setTimeout(() => res(3), 400)), {name: '3'})
-  .then(console.log)
-  .catch(console.log);
-queue
-  .push(() => new Promise(res => setTimeout(() => res(4), 100)), {name: '4'})
-  .then(console.log)
-  .catch(console.log);
-queue
-  .push(() => new Promise(res => setTimeout(() => res(5), 200)), {
-    name: '5',
-  })
-  .then(console.log)
-  .catch(console.log);
-queue
-  .push(() => new Promise(res => setTimeout(() => res(6), 400)), {name: '6'})
-  .then(console.log)
-  .catch(console.log);
-queue
-  .push(() => new Promise(res => setTimeout(() => res(7), 200)), {name: '7'})
-  .then(console.log)
-  .catch(console.log);
+const random = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min)) + min;
 
+function addPromise(num = 10) {
+  for (let index = 1; index <= num; index++) {
+    queue
+      .push(
+        () =>
+          new Promise(res => setTimeout(() => res(index), random(100, 1000))),
+        {
+          name: `${index}`,
+        }
+      )
+      .then(console.log)
+      .catch(console.log);
+  }
+}
+
+addPromise(20);
+
+// setTimeout(() => queue.pause(), 400);
+
+queue.start().then(c => console.log('ok'));
 queue.start().then(c => console.log('ok'));
