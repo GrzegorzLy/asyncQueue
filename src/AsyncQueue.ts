@@ -57,9 +57,12 @@ class AsyncQueue {
       return;
     }
 
-    this._logger(
-      `[${type}] name:${options?.name} time: ${Date.now()} | ${msg}`
-    );
+    let logMsg = `[${type}]`;
+    if (options?.name) {
+      logMsg += ` name: ${options?.name} `;
+    }
+
+    this._logger(`${logMsg} time: ${new Date().toISOString()} | ${msg}`);
   }
 
   push(fn: PromiseFunc, options?: TaskOptions) {

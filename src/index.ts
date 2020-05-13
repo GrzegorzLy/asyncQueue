@@ -23,7 +23,6 @@ function addPromise(num = 10) {
 setTimeout(() => addPromise(2), 1000);
 addPromise(20);
 
-// setTimeout(() => queue.pause(), 400);
-
 queue.start().then(c => console.log('ok'));
-queue.start().then(c => console.log('ok'));
+setTimeout(() => queue.pause(), 400);
+setTimeout(() => queue.start(), 6000);
