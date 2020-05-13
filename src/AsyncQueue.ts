@@ -59,11 +59,9 @@ class AsyncQueue {
   }
 
   push(fn: PromiseFunc, options?: TaskOptions) {
-    const task = new Promise((done, reject) => {
+    return new Promise((done, reject) => {
       this._queue.push(new Task(fn, done, reject, options));
     });
-
-    return task;
   }
 
   async start() {
