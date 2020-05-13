@@ -50,7 +50,7 @@ class AsyncQueue {
     }
   }
 
-  private async runner() {
+  private runner() {
     this.RUNNER_WORKING = true;
     while (this.canRun()) {
       this.runTask();

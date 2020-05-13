@@ -1,6 +1,6 @@
 import Queue from './AsyncQueue';
 
-const queue = new Queue({maxRetry: 2, concurrency: 7});
+const queue = new Queue({maxRetry: 2, concurrency: 1});
 
 queue
   .push(() => new Promise(res => setTimeout(() => res(1), 300)), {name: '1'})
