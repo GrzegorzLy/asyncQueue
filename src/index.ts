@@ -1,24 +1,38 @@
-console.log('Try npm run check/fix!');
+import Queue from './AsyncQueue';
 
-const longString =
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ut aliquet diam.';
+const queue = new Queue({maxRetry: 2, concurrency: 7});
 
-const trailing = 'Semicolon';
+queue
+  .push(() => new Promise(res => setTimeout(() => res(1), 300)), {name: '1'})
+  .then(console.log)
+  .catch(console.log);
+queue
+  .push(() => new Promise(res => setTimeout(() => res(2), 200)), {
+    name: '2',
+  })
+  .then(console.log)
+  .catch(console.log);
+queue
+  .push(() => new Promise(res => setTimeout(() => res(3), 400)), {name: '3'})
+  .then(console.log)
+  .catch(console.log);
+queue
+  .push(() => new Promise(res => setTimeout(() => res(4), 100)), {name: '4'})
+  .then(console.log)
+  .catch(console.log);
+queue
+  .push(() => new Promise(res => setTimeout(() => res(5), 200)), {
+    name: '5',
+  })
+  .then(console.log)
+  .catch(console.log);
+queue
+  .push(() => new Promise(res => setTimeout(() => res(6), 400)), {name: '6'})
+  .then(console.log)
+  .catch(console.log);
+queue
+  .push(() => new Promise(res => setTimeout(() => res(7), 200)), {name: '7'})
+  .then(console.log)
+  .catch(console.log);
 
-const why = 'am I tabbed?';
-
-export function doSomeStuff(
-  withThis: string,
-  andThat: string,
-  andThose: string[]
-) {
-  //function on one line
-  if (!andThose.length) {
-    return false;
-  }
-  console.log(withThis);
-  console.log(andThat);
-  console.dir(andThose);
-  return;
-}
-// TODO: more examples
+queue.start().then(c => console.log('ok'));
