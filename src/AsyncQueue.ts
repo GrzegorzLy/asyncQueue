@@ -13,25 +13,15 @@ class AsyncQueue {
     this._queue = new PFQueue();
     this.TASKS_RUNNING = 0;
 
-    this.setConcurrency(options?.concurrency);
-    this.setMaxRetry(options?.maxRetry);
+    this.setOptions(options);
   }
 
-  private setConcurrency(concurrency?: number) {
-    if (concurrency !== undefined) {
-      if (concurrency < 1) {
-        throw new RangeError('concurrency must be greaten then 1');
-      }
-      this.CONCURRENCY = concurrency;
+  private setOptions(options?: Options) {
+    if (options?.concurrency && options.concurrency > 1) {
+      this.CONCURRENCY = options.concurrency;
     }
-  }
-
-  private setMaxRetry(maxRetry?: number) {
-    if (maxRetry !== undefined) {
-      if (maxRetry < 0) {
-        throw new RangeError('maxRetry must be greaten then 0');
-      }
-      this.MAX_RETRY = maxRetry;
+    if (options?.maxRetry && options.maxRetry > 0) {
+      this.MAX_RETRY = options.maxRetry;
     }
   }
 
