@@ -1,9 +1,10 @@
-import {Queue, Options, PromiseFunc, TaskOptions} from './types';
+import {Queue, Options, PromiseFunc, TaskOptions, Void} from './types';
 import PFQueue from './Queue';
 import Task from './Task';
 
 class AsyncQueue {
   private _queue: Queue;
+  private _logger?: Void;
   private MAX_RETRY = 0;
   private CONCURRENCY = 1;
   private TASKS_RUNNING = 0;
@@ -12,6 +13,7 @@ class AsyncQueue {
   constructor(options?: Options) {
     this._queue = new PFQueue();
     this.TASKS_RUNNING = 0;
+    this._logger = options?.logger;
 
     this.setOptions(options);
   }
@@ -50,7 +52,18 @@ class AsyncQueue {
     }
   }
 
+  private log(msg: string, type: string, options?: TaskOptions) {
+    if (!this._logger) {
+      return;
+    }
+
+    this._logger(
+      `[${type}] name:${options?.name} time: ${Date.now()} | ${msg}`
+    );
+  }
+
   push(fn: PromiseFunc, options?: TaskOptions) {
+    this.log('add function to queue', 'PUSH', options);
     return new Promise((done, reject) => {
       this._queue.push(new Task(fn, done, reject, options));
       if (this.IS_RUNNING) {
@@ -63,6 +76,7 @@ class AsyncQueue {
     if (this.IS_RUNNING) {
       return Promise.resolve();
     }
+    this.log('queue starting', 'START');
     this.IS_RUNNING = true;
     this.runner();
 
@@ -74,6 +88,7 @@ class AsyncQueue {
   }
 
   pause() {
+    this.log('queue pause', 'PAUSE');
     this.IS_RUNNING = false;
     return Promise.resolve();
   }

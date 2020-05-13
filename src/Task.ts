@@ -1,7 +1,4 @@
-import {PromiseFunc, TaskOptions} from './types';
-
-type Void = (value: unknown) => void;
-type Reject = (error: Error) => void;
+import {PromiseFunc, TaskOptions, Void, Reject} from './types';
 
 class Task {
   done: Void;

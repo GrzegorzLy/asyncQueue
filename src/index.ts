@@ -1,6 +1,6 @@
 import Queue from './AsyncQueue';
 
-const queue = new Queue({maxRetry: 2, concurrency: 3});
+const queue = new Queue({maxRetry: 2, concurrency: 3, logger: console.log});
 
 const random = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min)) + min;
@@ -20,6 +20,7 @@ function addPromise(num = 10) {
   }
 }
 
+setTimeout(() => addPromise(2), 1000);
 addPromise(20);
 
 // setTimeout(() => queue.pause(), 400);
