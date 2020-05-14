@@ -1,19 +1,27 @@
-import {Queue, Options, PromiseFunc, TaskOptions, Void} from './types';
+import {
+  Queue,
+  Options,
+  PromiseFunc,
+  TaskOptions,
+  Void,
+  OperationTypes,
+} from './types';
 import PFQueue from './Queue';
 import Task from './Task';
+import LogBuilder from './Logger';
 
 class AsyncQueue {
   private _queue: Queue;
-  private _logger?: Void;
+  private _logger: LogBuilder;
   private MAX_RETRY = 0;
   private CONCURRENCY = 1;
-  private TASKS_RUNNING = 0;
+  private ACTIVE_COUNT = 0;
   private IS_RUNNING = false;
 
   constructor(options?: Options) {
     this._queue = new PFQueue();
-    this.TASKS_RUNNING = 0;
-    this._logger = options?.logger;
+    this.ACTIVE_COUNT = 0;
+    this._logger = new LogBuilder(options?.logger);
 
     this.setOptions(options);
   }
@@ -27,46 +35,35 @@ class AsyncQueue {
     }
   }
 
+  private runner() {
+    while (this.canRun()) {
+      this._logger.log(OperationTypes.RunTusk);
+      this.ACTIVE_COUNT++;
+      this.runTask();
+    }
+  }
+
   private canRun() {
     return (
       this.IS_RUNNING &&
-      this.CONCURRENCY > this.TASKS_RUNNING &&
+      this.ACTIVE_COUNT < this.CONCURRENCY &&
       this._queue.canNext()
     );
   }
 
   private async runTask() {
-    this.TASKS_RUNNING++;
     const task = this._queue.dequeue();
     await task.tryRun(this.MAX_RETRY);
-    this.TASKS_RUNNING--;
+    this.ACTIVE_COUNT--;
+    this._logger.log(OperationTypes.EndTask);
 
     if (this.canRun()) {
       this.runner();
     }
   }
 
-  private runner() {
-    while (this.canRun()) {
-      this.runTask();
-    }
-  }
-
-  private log(msg: string, type: string, options?: TaskOptions) {
-    if (!this._logger) {
-      return;
-    }
-
-    let logMsg = `[${type}]`;
-    if (options?.name) {
-      logMsg += ` name: ${options?.name} `;
-    }
-
-    this._logger(`${logMsg} time: ${new Date().toISOString()} | ${msg}`);
-  }
-
   push(fn: PromiseFunc, options?: TaskOptions) {
-    this.log('add function to queue', 'PUSH', options);
+    this._logger.log(OperationTypes.Push);
     return new Promise((done, reject) => {
       this._queue.push(new Task(fn, done, reject, options));
       if (this.IS_RUNNING) {
@@ -79,7 +76,8 @@ class AsyncQueue {
     if (this.IS_RUNNING) {
       return Promise.resolve();
     }
-    this.log('queue starting', 'START');
+    this._logger.log(OperationTypes.Start);
+
     this.IS_RUNNING = true;
     this.runner();
 
@@ -91,7 +89,7 @@ class AsyncQueue {
   }
 
   pause() {
-    this.log('queue pause', 'PAUSE');
+    this._logger.log(OperationTypes.Pause);
     this.IS_RUNNING = false;
     return Promise.resolve();
   }
