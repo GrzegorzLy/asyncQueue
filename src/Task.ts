@@ -12,7 +12,11 @@ class Task {
     reject: Reject,
     options?: TaskOptions
   ) {
-    this.pf = pf;
+    if (typeof pf !== 'function') {
+      this.pf = () => pf;
+    } else {
+      this.pf = pf;
+    }
     this.done = done;
     this.reject = reject;
     this.options = options;
