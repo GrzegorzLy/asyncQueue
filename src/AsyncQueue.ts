@@ -56,9 +56,7 @@ class AsyncQueue {
     this.ACTIVE_COUNT--;
     this._logger.log(OperationTypes.EndTask);
 
-    if (this.canRun()) {
-      this.runner();
-    }
+    this.runner();
   }
 
   push(task: PromiseFunc, options?: TaskOptions) {
@@ -67,18 +65,16 @@ class AsyncQueue {
     if (task === undefined) {
       return Promise.reject(new Error('task is undefined or null'));
     }
+
     return new Promise((done, reject) => {
       this._queue.push(new Task(task, done, reject, options));
-      if (this.IS_RUNNING) {
-        this.runner();
-      }
+      this.runner();
     });
   }
 
   async resume() {
-    if (this.IS_RUNNING) {
-      return Promise.resolve();
-    }
+    if (this.IS_RUNNING) return Promise.resolve();
+
     this._logger.log(OperationTypes.Resume);
     this.IS_RUNNING = true;
     this.runner();
@@ -89,6 +85,7 @@ class AsyncQueue {
   pause() {
     this._logger.log(OperationTypes.Pause);
     this.IS_RUNNING = false;
+
     return Promise.resolve();
   }
 }

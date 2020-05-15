@@ -2,14 +2,7 @@
 import Queue from '../AsyncQueue';
 
 describe('async queue', () => {
-  test('task returns the correct value when push is invoked before starting', async () => {
-    const queue = new Queue();
-    const task = queue.push(() => Promise.resolve(1));
-
-    await expect(task).resolves.toBe(1);
-  });
-
-  test('task returns the correct value when push is invoked after starting', async () => {
+  test('task returns the correct value', async () => {
     const queue = new Queue();
     const task = queue.push(() => Promise.resolve(1));
 
