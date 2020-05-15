@@ -11,7 +11,7 @@
   "keywords": [],
   "scripts": {
     "start": "ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "check": "gts check",
     "clean": "gts clean",
     "compile": "tsc",
@@ -21,8 +21,14 @@
     "posttest": "npm.cmd run check"
   },
   "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/jest": "^25.2.2",
+    "@types/node": "^13.11.1",
+    "babel-jest": "^26.0.1",
     "gts": "^2.0.2",
-    "typescript": "^3.8.3",
-    "@types/node": "^13.11.1"
+    "jest": "^26.0.1",
+    "typescript": "^3.8.3"
   }
 }
