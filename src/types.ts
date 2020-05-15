@@ -25,7 +25,7 @@ export interface TaskOptions {
 export enum OperationTypes {
   Push,
   Enqueue,
-  Start,
+  Resume,
   Pause,
   Retry,
   RunTusk,

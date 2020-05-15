@@ -15,8 +15,8 @@ class LogBuilder {
         return 'task end';
       case OperationTypes.Push:
         return 'task push to async queue';
-      case OperationTypes.Start:
-        return 'queue starting';
+      case OperationTypes.Resume:
+        return 'queue resume';
       case OperationTypes.Pause:
         return 'queue pause';
 
