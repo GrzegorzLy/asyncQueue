@@ -1,26 +1,19 @@
-import {
-  Queue,
-  Options,
-  PromiseFunc,
-  TaskOptions,
-  OperationTypes,
-} from './types';
-import PFQueue from './Queue';
+import {Options, PromiseFunc, TaskOptions, OperationTypes} from './types';
+import Queue from './Queue';
 import Task from './Task';
 import LogBuilder from './Logger';
 
 class AsyncQueue {
   private _queue: Queue;
-  private _logger: LogBuilder;
+  private _logger?: LogBuilder;
   private MAX_RETRY = 0;
   private CONCURRENCY = 1;
   private ACTIVE_COUNT = 0;
   private IS_RUNNING = true;
 
   constructor(options?: Options) {
-    this._queue = new PFQueue();
+    this._queue = new Queue();
     this.ACTIVE_COUNT = 0;
-    this._logger = new LogBuilder(options?.logger);
 
     this.setOptions(options);
   }
@@ -32,35 +25,34 @@ class AsyncQueue {
     if (options?.maxRetry && options.maxRetry > 0) {
       this.MAX_RETRY = options.maxRetry;
     }
-  }
-
-  private runner() {
-    while (this.canRun()) {
-      this._logger.log(OperationTypes.RunTusk);
-      this.ACTIVE_COUNT++;
-      this.runTask();
+    if (options?.logger) {
+      this._logger = new LogBuilder(options?.logger);
     }
   }
 
-  private canRun() {
-    return (
-      this.IS_RUNNING &&
-      this.ACTIVE_COUNT < this.CONCURRENCY &&
-      this._queue.canNext()
-    );
+  private next() {
+    if (!this.IS_RUNNING || this.ACTIVE_COUNT >= this.CONCURRENCY) return;
+    if (!this._queue.canNext()) {
+      if (!this.ACTIVE_COUNT) {
+        this._logger?.log(OperationTypes.QueueEmpty);
+      }
+      return;
+    }
+    this.ACTIVE_COUNT++;
+    this.runTask();
   }
 
   private async runTask() {
     const task = this._queue.dequeue();
     await task.tryRun(this.MAX_RETRY);
     this.ACTIVE_COUNT--;
-    this._logger.log(OperationTypes.EndTask);
+    this._logger?.log(OperationTypes.EndTask, task.options?.name);
 
-    this.runner();
+    this.next();
   }
 
   push(task: PromiseFunc, options?: TaskOptions) {
-    this._logger.log(OperationTypes.Push);
+    this._logger?.log(OperationTypes.Push, options?.name);
 
     if (task === undefined) {
       return Promise.reject(new Error('task is undefined or null'));
@@ -68,23 +60,23 @@ class AsyncQueue {
 
     return new Promise((done, reject) => {
       this._queue.push(new Task(task, done, reject, options));
-      this.runner();
+      this.next();
     });
   }
 
   async resume() {
     if (this.IS_RUNNING) return Promise.resolve();
 
-    this._logger.log(OperationTypes.Resume);
+    this._logger?.log(OperationTypes.Resume);
     this.IS_RUNNING = true;
-    this.runner();
+    this.next();
 
     return Promise.resolve();
   }
 
   pause() {
-    this._logger.log(OperationTypes.Pause);
     this.IS_RUNNING = false;
+    this._logger?.log(OperationTypes.Pause);
 
     return Promise.resolve();
   }

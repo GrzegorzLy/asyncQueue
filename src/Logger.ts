@@ -1,9 +1,9 @@
 import {OperationTypes, Logger} from './types';
 
 class LogBuilder {
-  private logger?: Logger;
+  private logger: Logger;
 
-  constructor(logger?: Logger) {
+  constructor(logger: Logger) {
     this.logger = logger;
   }
 
@@ -19,16 +19,21 @@ class LogBuilder {
         return 'queue resume';
       case OperationTypes.Pause:
         return 'queue pause';
+      case OperationTypes.QueueEmpty:
+        return 'queue is empty';
 
       default:
         return 'error';
     }
   }
 
-  log(type: OperationTypes) {
-    if (!this.logger) return;
+  log(type: OperationTypes, name?: string) {
+    let base = `[${OperationTypes[type]}] ${new Date().toISOString()}`;
+    if (name) {
+      base += ` name: ${name}`;
+    }
 
-    this.logger(`[${OperationTypes[type]}] ${this.builder(type)}`);
+    this.logger(`${base}  ${this.builder(type)}`);
   }
 }
 

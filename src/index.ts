@@ -21,7 +21,7 @@ function addPromise(num = 10) {
 }
 
 setTimeout(() => addPromise(2), 1000);
-addPromise(20);
+addPromise(3);
 
 setTimeout(() => queue.pause(), 400);
 setTimeout(() => queue.resume(), 6000);

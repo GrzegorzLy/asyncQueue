@@ -1,7 +1,6 @@
-import {Queue} from './types';
 import Task from './Task';
 
-class PFQueue implements Queue {
+class Queue {
   private _queue: Array<Task>;
 
   constructor() {
@@ -26,4 +25,4 @@ class PFQueue implements Queue {
   }
 }
 
-export default PFQueue;
+export default Queue;
