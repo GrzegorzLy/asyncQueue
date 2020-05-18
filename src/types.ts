@@ -6,21 +6,24 @@ export type PromiseFunc = () => Promise<unknown>;
 export interface Options {
   maxRetry?: number;
   concurrency?: number;
+  timeout?: number;
   logger?: Void;
 }
 
 export interface TaskOptions {
   name?: string;
   maxRetry?: number;
+  timeout?: number;
 }
 
 export enum OperationTypes {
-  Push,
-  Enqueue,
-  Resume,
-  Pause,
-  Retry,
-  RunTusk,
-  EndTask,
+  QueuePush,
+  QueueResume,
+  QueuePause,
   QueueEmpty,
+  TaskRun,
+  TaskDone,
+  TaskError,
+  TaskReject,
+  TaskRetry,
 }

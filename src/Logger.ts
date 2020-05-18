@@ -9,15 +9,19 @@ class LogBuilder {
 
   private builder(type: OperationTypes) {
     switch (type) {
-      case OperationTypes.RunTusk:
+      case OperationTypes.TaskRun:
         return 'task is running';
-      case OperationTypes.EndTask:
-        return 'task end';
-      case OperationTypes.Push:
+      case OperationTypes.TaskDone:
+        return 'task is done';
+      case OperationTypes.TaskRetry:
+        return 'the task has been repeated';
+      case OperationTypes.TaskReject:
+        return 'task rejected, too many attempts to retry';
+      case OperationTypes.QueuePush:
         return 'task push to async queue';
-      case OperationTypes.Resume:
+      case OperationTypes.QueueResume:
         return 'queue resume';
-      case OperationTypes.Pause:
+      case OperationTypes.QueuePause:
         return 'queue pause';
       case OperationTypes.QueueEmpty:
         return 'queue is empty';
@@ -27,13 +31,24 @@ class LogBuilder {
     }
   }
 
-  log(type: OperationTypes, name?: string) {
-    let base = `[${OperationTypes[type]}] ${new Date().toISOString()}`;
+  private base(type: OperationTypes, name?: string) {
+    const operationType = `[${OperationTypes[type]}]`.padEnd(13, ' ');
+    let base = `${operationType}${new Date().toISOString()}`;
     if (name) {
       base += ` name: ${name}`;
     }
 
-    this.logger(`${base}  ${this.builder(type)}`);
+    return base;
+  }
+
+  error(error: Error, name?: string) {
+    const base = this.base(OperationTypes.TaskError, name);
+    this.logger(`${base}  error: ${error}`);
+  }
+
+  log(type: OperationTypes, name?: string) {
+    const base = this.base(type, name);
+    this.logger(`${base} ${this.builder(type)}`);
   }
 }
 
