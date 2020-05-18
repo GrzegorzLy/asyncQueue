@@ -16,15 +16,12 @@ class AsyncQueue {
     this.ACTIVE_COUNT = 0;
     this._options = options;
 
-    this.setOptions(options);
-  }
-
-  private setOptions(options?: Options) {
     if (options?.concurrency && options.concurrency > 1) {
       this.CONCURRENCY = options.concurrency;
     }
+
     if (options?.logger) {
-      this._logger = new LogBuilder(options?.logger);
+      this._logger = new LogBuilder(options.logger);
     }
   }
 
