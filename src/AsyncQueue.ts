@@ -7,17 +7,17 @@ class AsyncQueue {
   private _queue: Queue;
   private _logger?: LogBuilder;
   private _options?: Options;
-  private CONCURRENCY = 1;
-  private ACTIVE_COUNT = 0;
-  private IS_RUNNING = true;
+  private _CONCURRENCY = 1;
+  private _ACTIVE_COUNT = 0;
+  private _IS_RUNNING = true;
 
   constructor(options?: Options) {
     this._queue = new Queue();
-    this.ACTIVE_COUNT = 0;
+    this._ACTIVE_COUNT = 0;
     this._options = options;
 
     if (options?.concurrency && options.concurrency > 1) {
-      this.CONCURRENCY = options.concurrency;
+      this._CONCURRENCY = options.concurrency;
     }
 
     if (options?.logger) {
@@ -25,26 +25,26 @@ class AsyncQueue {
     }
   }
 
-  private next() {
-    if (!this.IS_RUNNING || this.ACTIVE_COUNT >= this.CONCURRENCY) return;
+  private _next() {
+    if (!this._IS_RUNNING || this._ACTIVE_COUNT >= this._CONCURRENCY) return;
     if (!this._queue.canNext()) {
-      if (!this.ACTIVE_COUNT) {
+      if (!this._ACTIVE_COUNT) {
         this._logger?.log(OperationTypes.QueueEmpty);
       }
       return;
     }
-    this.ACTIVE_COUNT++;
-    this.runTask();
+    this._ACTIVE_COUNT++;
+    this._runTask();
   }
 
-  private async runTask() {
+  private async _runTask() {
     const task = this._queue.dequeue();
     this._logger?.log(OperationTypes.TaskRun, task.options?.name);
     await task.tryRun();
-    this.ACTIVE_COUNT--;
+    this._ACTIVE_COUNT--;
     this._logger?.log(OperationTypes.TaskDone, task.options?.name);
 
-    this.next();
+    this._next();
   }
 
   push(task: PromiseFunc, options?: TaskOptions) {
@@ -62,22 +62,22 @@ class AsyncQueue {
           ...options,
         })
       );
-      this.next();
+      this._next();
     });
   }
 
-  async resume() {
-    if (this.IS_RUNNING) return Promise.resolve();
+  resume() {
+    if (this._IS_RUNNING) return Promise.resolve();
 
     this._logger?.log(OperationTypes.QueueResume);
-    this.IS_RUNNING = true;
-    this.next();
+    this._IS_RUNNING = true;
+    this._next();
 
     return Promise.resolve();
   }
 
   pause() {
-    this.IS_RUNNING = false;
+    this._IS_RUNNING = false;
     this._logger?.log(OperationTypes.QueuePause);
 
     return Promise.resolve();

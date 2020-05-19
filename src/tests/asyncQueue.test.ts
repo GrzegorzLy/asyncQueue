@@ -46,4 +46,29 @@ describe('async queue', () => {
 
     await expect(task).rejects.toThrowError();
   });
+
+  test('the task will be resolved before a timeout exception', async () => {
+    const queue = new Queue({timeout: 4});
+    const task = queue.push(
+      () => new Promise(res => setTimeout(() => res(1), 3))
+    );
+
+    await expect(task).resolves.toBe(1);
+  });
+
+  test('the task before resolve will return a timeout promise reject', async () => {
+    const queue = new Queue({timeout: 4});
+    const task = queue.push(() => new Promise(res => setTimeout(res, 3)), {
+      timeout: 2,
+    });
+
+    await expect(task).rejects.toThrowError();
+  });
+
+  test('the task before resolve will return a timeout promise reject', async () => {
+    const queue = new Queue({timeout: 2});
+    const task = queue.push(() => new Promise(res => setTimeout(res, 3)));
+
+    await expect(task).rejects.toThrowError();
+  });
 });
