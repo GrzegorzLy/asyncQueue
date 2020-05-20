@@ -7,7 +7,7 @@ describe('Task', () => {
     const pf = jest.fn(
       () => new Promise(res => setTimeout(() => res('ok'), 4))
     );
-    const task = new Task(pf, done, reject, undefined, {timeout: 5});
+    const task = new Task(pf, done, reject, undefined, {timeout: 6});
     await task.tryRun();
 
     expect(done).toBeCalledTimes(1);
@@ -44,7 +44,7 @@ describe('Task', () => {
     const done = jest.fn();
     const reject = jest.fn();
     const pf = jest.fn(() => new Promise(res => setTimeout(res, 4)));
-    const task = new Task(pf, done, reject, undefined, {timeout: 3});
+    const task = new Task(pf, done, reject, undefined, {timeout: 2});
     await task.tryRun();
 
     expect(pf).toBeCalledTimes(1);
