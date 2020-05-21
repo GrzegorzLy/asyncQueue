@@ -19,6 +19,19 @@ describe('async queue', () => {
     await expect(Promise.all(tasks)).resolves.toEqual([1, 2]);
   });
 
+  test('tasks returns the array of promise in the correct  order', async () => {
+    const queue = new Queue();
+    const tasks = await queue.push([
+      () => Promise.resolve(1),
+      () => Promise.resolve(2),
+    ]);
+
+    if (Array.isArray(tasks)) {
+      await expect(Promise.all(tasks)).resolves.toEqual([1, 2]);
+    }
+    expect(Array.isArray(tasks)).toBeTruthy();
+  });
+
   test('task returns the correct values when function does not return promise', async () => {
     const queue = new Queue();
     const task = queue.push(() => 1 as any);

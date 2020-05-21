@@ -47,23 +47,29 @@ class AsyncQueue {
     this._next();
   }
 
-  push(task: PromiseFunc, options?: TaskOptions) {
+  push(pf: PromiseFunc | Array<PromiseFunc>, options?: TaskOptions) {
     this._logger?.log(OperationTypes.QueuePush, options?.name);
 
-    if (task === undefined) {
+    if (pf === undefined) {
       return Promise.reject(new Error('task is undefined or null'));
     }
+    const opt = {
+      maxRetry: this._options?.maxRetry,
+      timeout: this._options?.timeout,
+      ...options,
+    };
 
-    return new Promise((done, reject) => {
-      this._queue.push(
-        new Task(task, done, reject, this._logger, {
-          maxRetry: this._options?.maxRetry,
-          timeout: this._options?.timeout,
-          ...options,
-        })
-      );
-      this._next();
-    });
+    const pushTask = (task: PromiseFunc) =>
+      new Promise((done, reject) => {
+        this._queue.push(new Task(task, done, reject, this._logger, opt));
+      });
+
+    const task = Array.isArray(pf)
+      ? Promise.resolve(pf.map(pushTask))
+      : pushTask(pf);
+
+    this._next();
+    return task;
   }
 
   resume() {
