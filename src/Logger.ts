@@ -41,14 +41,29 @@ class LogBuilder {
     return base;
   }
 
+  private color(text: string, type: OperationTypes) {
+    switch (type) {
+      case OperationTypes.TaskError:
+        return `\x1b[31m${text}\x1b[0m`;
+      case OperationTypes.TaskDone:
+        return `\x1b[32m${text}\x1b[0m`;
+      case OperationTypes.QueuePush:
+        return `\x1b[36m${text}\x1b[0m`;
+      default:
+        return text;
+    }
+  }
+
   error(error: Error, name?: string) {
     const base = this.base(OperationTypes.TaskError, name);
-    this.logger(`${base}  error: ${error}`);
+    this.logger(
+      this.color(`${base}  error: ${error}`, OperationTypes.TaskError)
+    );
   }
 
   log(type: OperationTypes, name?: string) {
     const base = this.base(type, name);
-    this.logger(`${base} ${this.builder(type)}`);
+    this.logger(this.color(`${base} ${this.builder(type)}`, type));
   }
 }
 
