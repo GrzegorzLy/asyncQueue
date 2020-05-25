@@ -3,6 +3,10 @@ import Queue from './Queue';
 import Task from './Task';
 import LogBuilder from './Logger';
 
+//TODO:
+//-event emitter(onPush, onRun, OnSuccess, OnError, onPause, onResume, onEmpty)
+//-hooks(beforeRun, afterRun, afterTimeoutError, afterRunError)
+
 class AsyncQueue {
   private _queue: Queue;
   private _logger?: LogBuilder;
