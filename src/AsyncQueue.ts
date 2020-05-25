@@ -2,6 +2,7 @@ import {Options, PromiseFunc, TaskOptions, OperationTypes} from './types';
 import Queue from './Queue';
 import Task from './Task';
 import LogBuilder from './Logger';
+import TaskRunner from './TaskRunner';
 
 //TODO:
 //-event emitter(onPush, onRun, OnSuccess, OnError, onPause, onResume, onEmpty)
@@ -10,7 +11,7 @@ import LogBuilder from './Logger';
 class AsyncQueue {
   private _queue: Queue;
   private _logger?: LogBuilder;
-  private _options?: Options;
+  private _taskRunner: TaskRunner;
   private _CONCURRENCY = 1;
   private _ACTIVE_COUNT = 0;
   private _IS_RUNNING = true;
@@ -18,7 +19,6 @@ class AsyncQueue {
   constructor(options?: Options) {
     this._queue = new Queue();
     this._ACTIVE_COUNT = 0;
-    this._options = options;
 
     if (options?.concurrency && options.concurrency > 1) {
       this._CONCURRENCY = options.concurrency;
@@ -27,6 +27,7 @@ class AsyncQueue {
     if (options?.logger) {
       this._logger = new LogBuilder(options.logger);
     }
+    this._taskRunner = new TaskRunner(options ?? {}, this._logger);
   }
 
   private _next() {
@@ -44,7 +45,7 @@ class AsyncQueue {
   private async _runTask() {
     const task = this._queue.dequeue();
     this._logger?.log(OperationTypes.TaskRun, task.options?.name);
-    await task.tryRun();
+    await this._taskRunner.tryRun(task);
     this._ACTIVE_COUNT--;
     this._logger?.log(OperationTypes.TaskDone, task.options?.name);
 
@@ -57,15 +58,10 @@ class AsyncQueue {
     if (pf === undefined) {
       return Promise.reject(new Error('task is undefined or null'));
     }
-    const opt = {
-      maxRetry: this._options?.maxRetry,
-      timeout: this._options?.timeout,
-      ...options,
-    };
 
     const pushTask = (task: PromiseFunc) =>
       new Promise((done, reject) => {
-        this._queue.push(new Task(task, done, reject, this._logger, opt));
+        this._queue.push(new Task(task, done, reject, options));
       });
 
     const task = Array.isArray(pf)

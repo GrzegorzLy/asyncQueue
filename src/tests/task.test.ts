@@ -1,14 +1,17 @@
 import Task from '../Task';
+import TaskRunner from '../TaskRunner';
 
-describe('Task', () => {
+const taskRunner = new TaskRunner({});
+
+describe('TaskRunner', () => {
   test('the done function is called correctly when the pf is resolved', async () => {
     const done = jest.fn();
     const reject = jest.fn();
     const pf = jest.fn(
       () => new Promise(res => setTimeout(() => res('ok'), 4))
     );
-    const task = new Task(pf, done, reject, undefined, {timeout: 6});
-    await task.tryRun();
+    const task = new Task(pf, done, reject, {timeout: 6});
+    await taskRunner.tryRun(task);
 
     expect(done).toBeCalledTimes(1);
     expect(done).toBeCalledWith('ok');
@@ -20,7 +23,7 @@ describe('Task', () => {
     const reject = jest.fn();
     const pf = () => Promise.reject('error');
     const task = new Task(pf, done, reject);
-    await task.tryRun();
+    await taskRunner.tryRun(task);
 
     expect(done).toBeCalledTimes(0);
     expect(reject).toBeCalledWith('error');
@@ -31,8 +34,8 @@ describe('Task', () => {
     const done = jest.fn();
     const reject = jest.fn();
     const pf = jest.fn(() => Promise.reject('error'));
-    const task = new Task(pf, done, reject, undefined, {maxRetry: 1});
-    await task.tryRun();
+    const task = new Task(pf, done, reject, {maxRetry: 1});
+    await taskRunner.tryRun(task);
 
     expect(pf).toBeCalledTimes(2);
     expect(reject).toBeCalledTimes(1);
@@ -44,8 +47,8 @@ describe('Task', () => {
     const done = jest.fn();
     const reject = jest.fn();
     const pf = jest.fn(() => new Promise(res => setTimeout(res, 4)));
-    const task = new Task(pf, done, reject, undefined, {timeout: 2});
-    await task.tryRun();
+    const task = new Task(pf, done, reject, {timeout: 2});
+    await taskRunner.tryRun(task);
 
     expect(pf).toBeCalledTimes(1);
     expect(reject).toBeCalledTimes(1);
