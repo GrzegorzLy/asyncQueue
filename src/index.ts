@@ -1,6 +1,7 @@
-import Queue from './AsyncQueue';
+import asyncQueue from './AsyncQueue';
+import {HookType} from './types';
 
-const queue = new Queue({
+const queue = asyncQueue({
   maxRetry: 1,
   concurrency: 2,
   timeout: 2,
@@ -25,13 +26,25 @@ function addPromise(num = 10) {
           name: `${index}`,
         }
       )
-      .then()
+      .then(console.log)
       .catch(() => console.log('---error---'));
   }
 }
+queue.addHook(HookType.beforeRun, (task, options) => {
+  if (options?.name === 'test' && typeof task === 'number') {
+    return task + 10;
+  }
+  return task;
+});
 
+queue.addHook(HookType.afterRunError, (task, options) => {
+  return options;
+});
+
+addPromise(3);
+
+// queue.push(1, {name: 'test'}).then(console.log);
 // setTimeout(() => addPromise(2), 1000);
-addPromise(1);
 
 // setTimeout(() => queue.pause(), 400);
 // setTimeout(() => queue.resume(), 6000);

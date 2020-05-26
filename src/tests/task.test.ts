@@ -1,7 +1,8 @@
 import Task from '../Task';
 import TaskRunner from '../TaskRunner';
+import Hooks from '../Hooks';
 
-const taskRunner = new TaskRunner({});
+const taskRunner = new TaskRunner({}, new Hooks());
 
 describe('TaskRunner', () => {
   test('the done function is called correctly when the pf is resolved', async () => {

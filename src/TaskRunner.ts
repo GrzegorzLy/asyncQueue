@@ -1,14 +1,17 @@
-import {Options, OperationTypes} from './types';
+import {Options, OperationTypes, HookType} from './types';
 import LogBuilder from './Logger';
 import Task from './Task';
+import Hooks from './Hooks';
 
 class TaskRunner {
   logger?: LogBuilder;
   options: Options;
+  hooks: Hooks;
 
-  constructor(options: Options, logger?: LogBuilder) {
+  constructor(options: Options, hooks: Hooks, logger?: LogBuilder) {
     this.logger = logger;
     this.options = options;
+    this.hooks = hooks;
   }
 
   private async runWithTimeout(task: Task, timeout: number) {
@@ -20,12 +23,12 @@ class TaskRunner {
           timeout
         )
       ),
-      task.pf(),
+      task.run(),
     ]);
   }
 
-  private async run(task: Task) {
-    return task.pf();
+  private run(task: Task) {
+    return task.run();
   }
 
   async tryRun(task: Task, retryingCount = 0) {
@@ -36,8 +39,7 @@ class TaskRunner {
         timeout > 0
           ? await this.runWithTimeout(task, timeout)
           : await this.run(task);
-
-      task.done(result);
+      task.done(this.hooks.run(HookType.afterRun, result, task.options));
     } catch (err) {
       this.logger?.error(err, task.options?.name);
       if (retryingCount >= maxRetry) {
@@ -45,6 +47,10 @@ class TaskRunner {
         task.reject(err);
       } else {
         this.logger?.log(OperationTypes.TaskRetry, task.options?.name);
+        task.setTask(
+          this.hooks.run(HookType.afterRunError, task.task, task.options)
+        );
+
         await this.tryRun(task, retryingCount + 1);
       }
     }

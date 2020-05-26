@@ -1,93 +1,99 @@
-import {Options, PromiseFunc, TaskOptions, OperationTypes} from './types';
+import {
+  Options,
+  TaskOptions,
+  OperationTypes,
+  HookType,
+  MiddlewareFunc,
+} from './types';
 import Queue from './Queue';
 import Task from './Task';
 import LogBuilder from './Logger';
 import TaskRunner from './TaskRunner';
+import Hooks from './Hooks';
 
 //TODO:
 //-event emitter(onPush, onRun, OnSuccess, OnError, onPause, onResume, onEmpty)
-//-hooks(beforeRun, afterRun, afterTimeoutError, afterRunError)
 
-class AsyncQueue {
-  private _queue: Queue;
-  private _logger?: LogBuilder;
-  private _taskRunner: TaskRunner;
-  private _CONCURRENCY = 1;
-  private _ACTIVE_COUNT = 0;
-  private _IS_RUNNING = true;
+function asyncQueue(options?: Options) {
+  const _queue = new Queue();
+  const _logger = options?.logger && new LogBuilder(options.logger);
+  const _hooks = new Hooks();
+  const _taskRunner = new TaskRunner(options ?? {}, _hooks, _logger);
 
-  constructor(options?: Options) {
-    this._queue = new Queue();
-    this._ACTIVE_COUNT = 0;
+  let ACTIVE_COUNT = 0;
+  let CONCURRENCY = 1;
+  let IS_RUNNING = true;
 
-    if (options?.concurrency && options.concurrency > 1) {
-      this._CONCURRENCY = options.concurrency;
-    }
-
-    if (options?.logger) {
-      this._logger = new LogBuilder(options.logger);
-    }
-    this._taskRunner = new TaskRunner(options ?? {}, this._logger);
+  if (options?.concurrency && options.concurrency > 1) {
+    CONCURRENCY = options.concurrency;
   }
 
-  private _next() {
-    if (!this._IS_RUNNING || this._ACTIVE_COUNT >= this._CONCURRENCY) return;
-    if (!this._queue.canNext()) {
-      if (!this._ACTIVE_COUNT) {
-        this._logger?.log(OperationTypes.QueueEmpty);
+  function _next() {
+    if (!IS_RUNNING || ACTIVE_COUNT >= CONCURRENCY) return;
+
+    if (!_queue.canNext()) {
+      if (!ACTIVE_COUNT) {
+        _logger?.log(OperationTypes.QueueEmpty);
       }
       return;
     }
-    this._ACTIVE_COUNT++;
-    this._runTask();
+    ACTIVE_COUNT++;
+    _runTask();
   }
 
-  private async _runTask() {
-    const task = this._queue.dequeue();
-    this._logger?.log(OperationTypes.TaskRun, task.options?.name);
-    await this._taskRunner.tryRun(task);
-    this._ACTIVE_COUNT--;
-    this._logger?.log(OperationTypes.TaskDone, task.options?.name);
+  async function _runTask() {
+    const task = _queue.dequeue();
+    task.setTask(_hooks.run(HookType.beforeRun, task.task, task.options));
 
-    this._next();
+    _logger?.log(OperationTypes.TaskRun, task.options?.name);
+    await _taskRunner.tryRun(task);
+    ACTIVE_COUNT--;
+    _logger?.log(OperationTypes.TaskDone, task.options?.name);
+
+    _next();
   }
 
-  push(pf: PromiseFunc | Array<PromiseFunc>, options?: TaskOptions) {
-    this._logger?.log(OperationTypes.QueuePush, options?.name);
-
-    if (pf === undefined) {
-      return Promise.reject(new Error('task is undefined or null'));
-    }
-
-    const pushTask = (task: PromiseFunc) =>
+  function push(taskQueue: unknown | Array<unknown>, options?: TaskOptions) {
+    _logger?.log(OperationTypes.QueuePush, options?.name);
+    const pushTask = (task: unknown) =>
       new Promise((done, reject) => {
-        this._queue.push(new Task(task, done, reject, options));
+        _queue.push(new Task(task, done, reject, options));
       });
 
-    const task = Array.isArray(pf)
-      ? Promise.resolve(pf.map(pushTask))
-      : pushTask(pf);
+    try {
+      const task = Array.isArray(taskQueue)
+        ? Promise.resolve(taskQueue.map(pushTask))
+        : pushTask(taskQueue);
 
-    this._next();
-    return task;
+      _next();
+      return task;
+    } catch (err) {
+      return Promise.reject(err);
+    }
   }
 
-  resume() {
-    if (this._IS_RUNNING) return Promise.resolve();
+  function resume() {
+    if (IS_RUNNING) return Promise.resolve();
 
-    this._logger?.log(OperationTypes.QueueResume);
-    this._IS_RUNNING = true;
-    this._next();
+    _logger?.log(OperationTypes.QueueResume);
+    IS_RUNNING = true;
+    _next();
 
     return Promise.resolve();
   }
 
-  pause() {
-    this._IS_RUNNING = false;
-    this._logger?.log(OperationTypes.QueuePause);
+  function pause() {
+    IS_RUNNING = false;
+    _logger?.log(OperationTypes.QueuePause);
 
     return Promise.resolve();
   }
+
+  function addHook(type: HookType, hook: MiddlewareFunc) {
+    _hooks.add(type, hook);
+  }
+
+  return {push, resume, pause, addHook};
 }
 
-export default AsyncQueue;
+export default asyncQueue;
