@@ -32,6 +32,9 @@ export enum OperationTypes {
   TaskError,
   TaskReject,
   TaskRetry,
+  HooksStart,
+  HooksDone,
+  HooksError,
 }
 
 export enum HookType {

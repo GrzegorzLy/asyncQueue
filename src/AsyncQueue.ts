@@ -17,7 +17,7 @@ import Hooks from './Hooks';
 function asyncQueue(options?: Options) {
   const _queue = new Queue();
   const _logger = options?.logger && new LogBuilder(options.logger);
-  const _hooks = new Hooks();
+  const _hooks = new Hooks(_logger);
   const _taskRunner = new TaskRunner(options ?? {}, _hooks, _logger);
 
   let ACTIVE_COUNT = 0;
@@ -43,7 +43,7 @@ function asyncQueue(options?: Options) {
 
   async function _runTask() {
     const task = _queue.dequeue();
-    task.setTask(_hooks.run(HookType.beforeRun, task.task, task.options));
+    task.setTask(await _hooks.run(HookType.beforeRun, task.task, task.options));
 
     _logger?.log(OperationTypes.TaskRun, task.options?.name);
     await _taskRunner.tryRun(task);

@@ -16,18 +16,22 @@ class LogBuilder {
       case OperationTypes.TaskRetry:
         return 'the task has been repeated';
       case OperationTypes.TaskReject:
-        return 'task rejected, too many attempts to retry';
+        return 'the task rejected, too many attempts to retry';
       case OperationTypes.QueuePush:
         return 'task push to async queue';
       case OperationTypes.QueueResume:
-        return 'queue resume';
+        return 'the queue resume';
       case OperationTypes.QueuePause:
-        return 'queue pause';
+        return 'the queue pause';
       case OperationTypes.QueueEmpty:
-        return 'queue is empty';
+        return 'the queue is empty';
+      case OperationTypes.HooksStart:
+        return 'the hooks are start';
+      case OperationTypes.HooksDone:
+        return 'the hooks are done';
 
       default:
-        return 'error';
+        return 'an error occurred';
     }
   }
 
@@ -35,7 +39,7 @@ class LogBuilder {
     const operationType = `[${OperationTypes[type]}]`.padEnd(13, ' ');
     let base = `${operationType}${new Date().toISOString()}`;
     if (name) {
-      base += ` name: ${name}`;
+      base += ` (name: ${name})`;
     }
 
     return base;
@@ -45,6 +49,7 @@ class LogBuilder {
     switch (type) {
       case OperationTypes.TaskError:
       case OperationTypes.TaskReject:
+      case OperationTypes.HooksError:
         return `\x1b[31m${text}\x1b[0m`;
       case OperationTypes.TaskDone:
         return `\x1b[32m${text}\x1b[0m`;
@@ -58,7 +63,7 @@ class LogBuilder {
   error(error: Error, name?: string) {
     const base = this.base(OperationTypes.TaskError, name);
     this.logger(
-      this.color(`${base}  error: ${error}`, OperationTypes.TaskError)
+      this.color(`${base} error: ${error}`, OperationTypes.TaskError)
     );
   }
 

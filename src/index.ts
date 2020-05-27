@@ -41,7 +41,7 @@ queue.addHook(HookType.afterRunError, (task, options) => {
   return options;
 });
 
-addPromise(3);
+addPromise(1);
 
 // queue.push(1, {name: 'test'}).then(console.log);
 // setTimeout(() => addPromise(2), 1000);

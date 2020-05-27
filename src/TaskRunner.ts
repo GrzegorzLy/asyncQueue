@@ -39,7 +39,7 @@ class TaskRunner {
         timeout > 0
           ? await this.runWithTimeout(task, timeout)
           : await this.run(task);
-      task.done(this.hooks.run(HookType.afterRun, result, task.options));
+      task.done(await this.hooks.run(HookType.afterRun, result, task.options));
     } catch (err) {
       this.logger?.error(err, task.options?.name);
       if (retryingCount >= maxRetry) {
@@ -48,7 +48,7 @@ class TaskRunner {
       } else {
         this.logger?.log(OperationTypes.TaskRetry, task.options?.name);
         task.setTask(
-          this.hooks.run(HookType.afterRunError, task.task, task.options)
+          await this.hooks.run(HookType.afterRunError, task.task, task.options)
         );
 
         await this.tryRun(task, retryingCount + 1);
