@@ -2,7 +2,7 @@ export type Void = (value: unknown) => void;
 export type Reject = (error: Error) => void;
 export type Logger = (msg: string) => void;
 export type ActiveHooks = {[value in HookType]?: Array<MiddlewareFunc>};
-export type MiddlewareFunc = (task: unknown, options?: TaskOptions) => unknown;
+export type MiddlewareFunc = (task: unknown, options: TaskOptions) => unknown;
 
 export type RunHook = (
   type: HookType,

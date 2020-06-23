@@ -27,7 +27,7 @@ class Hooks {
       const hooks = this.activeHooks[type] || [];
 
       for (const hook of hooks) {
-        result = await hook(result, options);
+        result = await hook(result, options || {});
       }
 
       this.logger?.log(OperationTypes.HooksDone, options?.name);
