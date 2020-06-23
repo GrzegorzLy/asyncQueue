@@ -18,17 +18,17 @@ class LogBuilder {
       case OperationTypes.TaskReject:
         return 'the task rejected, too many attempts to retry';
       case OperationTypes.QueuePush:
-        return 'task push to async queue';
+        return 'the task has been pushed to async queue';
       case OperationTypes.QueueResume:
-        return 'the queue resume';
+        return 'the queue has been resumed';
       case OperationTypes.QueuePause:
-        return 'the queue pause';
+        return 'the queue has been paused';
       case OperationTypes.QueueEmpty:
         return 'the queue is empty';
       case OperationTypes.HooksStart:
-        return 'the hooks are start';
+        return 'the hooks is starting';
       case OperationTypes.HooksDone:
-        return 'the hooks are done';
+        return 'the hooks is done';
 
       default:
         return 'an error occurred';
